@@ -1,16 +1,17 @@
 import { useState } from 'react';
 
-function Square({ value, onSquareClick }) {
+function Square({ value, onSquareClick, isWinner }) {
   return (
-    <button className="square" onClick={onSquareClick}>
+    <button className={isWinner ? "square square-winner" : "square"} onClick={onSquareClick}>
       {value}
-    </button>
+    </button >
   );
 }
 
-function Board({ xIsNext, squares, onPlay, sizeBoard, setLocations }) {
+function Board({ xIsNext, squares, onPlay, sizeBoard, setLocations, isDrawGame }) {
 
   function handleClick(i) {
+
     if (calculateWinner(squares) || squares[i]) {
       return;
     };
@@ -25,13 +26,19 @@ function Board({ xIsNext, squares, onPlay, sizeBoard, setLocations }) {
       nextSquares[i] = 'O';
     }
     onPlay(nextSquares);
+
   }
 
-  const winner = calculateWinner(squares);
+  const gameResult = calculateWinner(squares);
+  let lineWinner = null;
   let status;
-  if (winner) {
-    status = 'Winner: ' + winner;
-  } else {
+  if (gameResult) {
+    status = 'Winner: ' + gameResult?.winner;
+    lineWinner = gameResult?.result;
+  } else if (isDrawGame) {
+    status = 'Game Draw';
+  }
+  else {
     status = 'Next player: ' + (xIsNext ? 'X' : 'O');
   }
 
@@ -47,21 +54,23 @@ function Board({ xIsNext, squares, onPlay, sizeBoard, setLocations }) {
 
   return (
     <>
-      <div className="status">{status}</div>
-      {
-        squareRows.map((row, rowIndex) => {
-          return <div key={rowIndex} className="board-row">
-            {
-              squareRows.map((col, colIndex) => {
-                const squareIndex = rowIndex * sizeBoard + colIndex;
-                return <Square value={squares[squareIndex]} key={squareIndex}
-                  onSquareClick={() => handleClick(squareIndex)} />
-              })
-            }
-          </div>
-        })
-      }
-
+      <div className={status === 'Game Draw' || status.startsWith('Winner') ? 'status final-status' : 'status'}>{status}</div>
+      {squareRows.map((row, rowIndex) => (
+        <div key={rowIndex} className="board-row">
+          {squareRows.map((col, colIndex) => {
+            const squareIndex = rowIndex * sizeBoard + colIndex;
+            const isWinnerSquare = lineWinner && lineWinner.includes(squareIndex);
+            return (
+              <Square
+                value={squares[squareIndex]}
+                key={squareIndex}
+                onSquareClick={() => handleClick(squareIndex)}
+                isWinner={isWinnerSquare}
+              />
+            );
+          })}
+        </div>
+      ))}
     </>
   );
 }
@@ -78,11 +87,16 @@ export default function Game() {
 
   const [sortAscending, setSortAscending] = useState(true);
 
+  const [isDrawGame, setIsDrawGame] = useState(false);
   function handlePlay(nextSquares) {
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
     setHistory(nextHistory);
     setCurrentMove(nextHistory.length - 1);
     console.log(locations);
+    let checkDrawGame = nextSquares.every((value) => value !== null && (value === 'X' || value === 'O'));
+    if (checkDrawGame === true) {
+      setIsDrawGame(true);
+    }
 
   }
 
@@ -119,13 +133,13 @@ export default function Game() {
   return (
     <div className="game">
       <div className="game-board">
-        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} sizeBoard={sizeBoard} setLocations={setLocations} />
+        <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} sizeBoard={sizeBoard} setLocations={setLocations} isDrawGame={isDrawGame} />
       </div>
       <div className="game-info">
         <button onClick={() => setSortAscending(!sortAscending)}>Sort the moves {sortAscending ? 'descending' : 'ascending'}</button>
         <ol style={{
           display: 'flex',
-          flexDirection: (sortAscending === false) ? 'column-reverse' : 'column'
+          flexDirection: sortAscending ? 'column' : 'column-reverse'
         }}>
           {moves}
         </ol>
@@ -148,10 +162,12 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return {
+        winner: squares[a],
+        result: lines[i]
+      }
     }
   }
+
   return null;
-
-
 }
