@@ -28,7 +28,7 @@ function Board({ xIsNext, squares, onPlay, sizeBoard, setLocations, isDrawGame }
         status = 'Winner: ' + gameResult?.winner;
         lineWinner = gameResult?.result;
     } else if (isDrawGame) {
-        status = 'Game Draw';
+        status = 'Draw!';
     }
     else {
         status = 'Next player: ' + (xIsNext ? 'X' : 'O');
@@ -68,7 +68,7 @@ function Board({ xIsNext, squares, onPlay, sizeBoard, setLocations, isDrawGame }
     }
     return (
         <>
-            <div className={status === 'Game Draw' || status.startsWith('Winner') ? 'status final-status' : 'status'}>{status}</div>
+            <div className={status === 'Draw!' || status.startsWith('Winner') ? 'status final-status' : 'status'}>{status}</div>
             {squareRows.map((row, rowIndex) => (
                 <div key={rowIndex} className="board-row">
                     {squareRows.map((col, colIndex) => {
