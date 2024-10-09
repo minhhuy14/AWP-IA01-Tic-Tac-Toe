@@ -76,6 +76,8 @@ export default function Game() {
 
   const [locations, setLocations] = useState([]);
 
+  const [sortAscending, setSortAscending] = useState(true);
+
   function handlePlay(nextSquares) {
     const nextHistory = [...history.slice(0, currentMove + 1), nextSquares];
     setHistory(nextHistory);
@@ -110,9 +112,9 @@ export default function Game() {
           <button onClick={() => jumpTo(move)}>{description}</button>
         )}
       </li>
+
     )
   });
-
 
   return (
     <div className="game">
@@ -120,7 +122,13 @@ export default function Game() {
         <Board xIsNext={xIsNext} squares={currentSquares} onPlay={handlePlay} sizeBoard={sizeBoard} setLocations={setLocations} />
       </div>
       <div className="game-info">
-        <ol>{moves}</ol>
+        <button onClick={() => setSortAscending(!sortAscending)}>Sort the moves {sortAscending ? 'descending' : 'ascending'}</button>
+        <ol style={{
+          display: 'flex',
+          flexDirection: (sortAscending === false) ? 'column-reverse' : 'column'
+        }}>
+          {moves}
+        </ol>
       </div>
     </div>
   );
